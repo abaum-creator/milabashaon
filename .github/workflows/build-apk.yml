@@ -1,1 +1,56 @@
 
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Collect app files
+        run: mkdir -p web && cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png web/
+
+      - name: Install
+        run: npm install
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Allow text-to-speech engines (Android 11+)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#&\n    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE" />\n        </intent>\n    </queries>#' $M
+          grep -q TTS_SERVICE $M
+
+      - name: Sync
+        run: npx cap sync android
+
+      - name: Build APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+
+      - name: Rename
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk mila-bashaon.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: mila-bashaon.apk
