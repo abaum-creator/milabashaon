@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מילה בשעון – 5 יחידות</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1D2B6B">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --ink:#1D2B6B; --paper:#F3F5FB; --card:#FFFFFF; --text:#16193A; --muted:#5B6185;
+  --marker:#FFCF33; --ok:#14866D; --bad:#D9472B; --line:#D7DBEC; --soft:#E7EAF6;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#AFC0FF; --paper:#10132A; --card:#1A1F3F; --text:#EEF0FF; --muted:#A3A9CF;
+  --marker:#FFD54A; --ok:#3CC79F; --bad:#FF7A5C; --line:#2E3563; --soft:#242a52; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --ink:#AFC0FF; --paper:#10132A; --card:#1A1F3F; --text:#EEF0FF; --muted:#A3A9CF;
+  --marker:#FFD54A; --ok:#3CC79F; --bad:#FF7A5C; --line:#2E3563; --soft:#242a52; color-scheme:dark;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--text);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 40px}
+h1{font-weight:800;font-size:2rem;line-height:1.1;margin:8px 0 4px;color:var(--ink)}
+h1 .hl{background:linear-gradient(transparent 55%,var(--marker) 55%);padding:0 4px;color:var(--text)}
+h2{font-size:1.15rem;margin:0 0 10px}
+p.sub{color:var(--muted);margin:0 0 22px}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+button{font:inherit;cursor:pointer;border:none;border-radius:10px}
+button:focus-visible,textarea:focus-visible,label.drop:focus-within{outline:3px solid var(--marker);outline-offset:2px}
+.btn{background:var(--ink);color:var(--paper);padding:12px 20px;font-weight:700}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.small{padding:7px 12px;font-size:.9rem;font-weight:500}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.drop{display:block;border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;cursor:pointer;color:var(--muted)}
+label.drop strong{color:var(--ink);display:block;font-size:1.05rem}
+label.drop input{position:absolute;opacity:0;width:1px;height:1px}
+textarea{width:100%;min-height:110px;font:inherit;font-size:.95rem;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--text);direction:ltr;text-align:left;resize:vertical}
+.status{margin-top:10px;font-size:.95rem;color:var(--muted);min-height:1.5em}
+.status.err{color:var(--bad)}
+.seg{display:flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:var(--ink);padding:10px 6px;border-radius:0;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+.seg button+button{border-inline-start:1.5px solid var(--ink)}
+.field{margin-bottom:14px}
+.field>span{display:block;font-size:.9rem;color:var(--muted);margin-bottom:6px}
+.count{font-size:2.6rem;font-weight:800;color:var(--ink);line-height:1}
+.list{max-height:280px;overflow:auto;border-top:1px solid var(--line);margin-top:12px}
+.list div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:.95rem}
+.list .en{direction:ltr;font-family:Georgia,"Times New Roman",serif;font-weight:600}
+.list button{background:none;color:var(--muted);padding:2px 8px;font-size:1.1rem}
+/* game */
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:500;color:var(--muted)}
+.hud b{color:var(--text)}
+.wordcard{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:30px 18px 22px;text-align:center;position:relative}
+.word{font-family:Georgia,"Times New Roman",serif;font-weight:800;font-size:clamp(2rem,9vw,3.2rem);direction:ltr;line-height:1.1;word-break:break-word}
+.speak{background:none;color:var(--muted);font-size:1.3rem;margin-top:6px}
+.bar{height:12px;background:var(--soft);border-radius:6px;overflow:hidden;margin:18px 0 0}
+.bar i{display:block;height:100%;width:100%;background:var(--ink);transform-origin:right;border-radius:6px}
+.bar i.late{background:var(--bad)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.opt{background:var(--card);color:var(--text);border:1.5px solid var(--line);padding:16px 10px;font-size:1.08rem;font-weight:500;min-height:72px;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s}
+.opt:active{transform:scale(.97)}
+.opt .k{font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.opt.right{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.right .k,.opt.wrong .k{color:#fff;border-color:#fff8}
+.feedback{text-align:center;font-weight:700;min-height:1.6em;margin-top:12px}
+.feedback.ok{color:var(--ok)} .feedback.bad{color:var(--bad)}
+.big{font-size:3.4rem;font-weight:800;color:var(--ink);text-align:center;line-height:1}
+.center{text-align:center}
+.miss div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.hidden{display:none!important}
+@media (prefers-reduced-motion:reduce){.opt{transition:none}}
+@media (max-width:380px){.opt{font-size:1rem;min-height:64px}}
+
+.sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;max-height:330px;overflow:auto;padding:2px}
+.set{background:var(--paper);color:var(--text);border:1.5px solid var(--line);padding:8px 4px;font-weight:700;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.set small{font-weight:400;font-size:.75rem;color:var(--muted)}
+.set.done{border-color:var(--ok)} .set.done small{color:var(--ok);font-weight:700}
+.set.part small{color:var(--bad)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.plist{padding:6px 16px}
+.plist div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.plist div:last-child{border-bottom:none}
+.plist .en{direction:ltr;font-family:Georgia,serif;font-weight:700;font-size:1.1rem;background:none;color:var(--text);padding:0;text-align:left}
+.plist .n{color:var(--muted);font-size:.8rem;min-width:1.6em}
+.plist .he{flex:1}
+.readybar{position:sticky;bottom:0;padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper)}
+.readybar .btn{width:100%;font-size:1.15rem;padding:16px}
+.fcard{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:22px 16px;text-align:center;margin-bottom:12px;touch-action:pan-y}
+.fc-count{color:var(--muted);font-size:.9rem}
+.fc-en{font-family:Georgia,serif;font-weight:800;font-size:clamp(2rem,9vw,3rem);direction:ltr;margin:14px 0 6px;word-break:break-word;line-height:1.15}
+.fc-he{font-size:1.5rem;font-weight:700;color:var(--ink);margin-bottom:18px}
+.fc-play{font-size:1.1rem;padding:12px 26px}
+.fc-nav{display:flex;gap:8px;margin-top:16px}
+.fc-nav .btn{flex:1;padding:10px 4px;font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="setup">
+  <h1>מילה <span class="hl">בשעון</span></h1>
+  <p class="sub">אוצר המילים הרשמי של משרד החינוך ל-5 יחידות: Band III, רשימות A–D. המילים מעורבבות ומחולקות לסטים.</p>
+
+  <div class="panel">
+    <div class="field"><span>רשימה</span>
+      <div class="seg" id="segList">
+        <button data-v="all" aria-pressed="true">הכל</button>
+        <button data-v="A" aria-pressed="false">A</button>
+        <button data-v="B" aria-pressed="false">B</button>
+        <button data-v="C" aria-pressed="false">C</button>
+        <button data-v="D" aria-pressed="false">D</button>
+      </div>
+    </div>
+    <div class="field"><span>גודל סט</span>
+      <div class="seg" id="segSize">
+        <button data-v="20" aria-pressed="true">20 מילים</button>
+        <button data-v="25" aria-pressed="false">25 מילים</button>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0"><span>זמן לכל מילה</span>
+      <div class="seg" id="segTime">
+        <button data-v="15" aria-pressed="true">15 שנ׳ · קל</button>
+        <button data-v="10" aria-pressed="false">10 שנ׳ · בינוני</button>
+        <button data-v="5" aria-pressed="false">5 שנ׳ · קשה</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">בחירת סט</h2>
+      <span style="color:var(--muted);font-size:.9rem" id="progress"></span>
+    </div>
+    <div class="sets" id="sets"></div>
+    <div class="quick">
+      <button class="btn ghost" id="randomBtn">סט אקראי מכל המילים</button>
+      <button class="btn ghost" id="mistakesBtn">המילים שטעיתי בהן</button>
+    </div>
+    <div class="status" id="startMsg"></div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="count" id="count">0</div><span style="color:var(--muted)">מילים במאגר</span></div>
+      <button class="btn ghost small" id="toggleList">הצגת הרשימה</button>
+    </div>
+    <div class="list hidden" id="list"></div>
+    <div class="field" style="margin-top:14px">
+      <span>הוספת מילים משלכם: שורה לכל מילה, מילה באנגלית – פירוש בעברית</span>
+      <textarea id="paste" placeholder="window – חלון&#10;mountain – הר"></textarea>
+    </div>
+    <div class="row">
+      <button class="btn" id="addText">הוספה</button>
+      <button class="btn ghost small" id="resetProgress">איפוס התקדמות</button>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<section id="preview" class="hidden">
+  <div class="hud">
+    <span><b id="pvName"></b> · <b id="pvCount"></b> מילים</span>
+    <button class="btn ghost small" id="pvBack">חזרה</button>
+  </div>
+  <p class="sub" style="margin-bottom:12px">עברו על המילים ועל התרגום. אפשר ללחוץ על מילה כדי לשמוע אותה. כשמוכנים, לוחצים על הכפתור.</p>
+  <div class="seg" id="pvMode" style="margin-bottom:12px">
+    <button data-m="cards" aria-pressed="true">כרטיסיות</button>
+    <button data-m="list" aria-pressed="false">רשימה</button>
+  </div>
+  <div class="fcard" id="pvCards">
+    <div class="fc-count" id="fcCount"></div>
+    <div class="fc-en" id="fcEn"></div>
+    <div class="fc-he" id="fcHe"></div>
+    <button class="btn fc-play" id="fcPlay">🔊 השמעה</button>
+    <div class="fc-nav">
+      <button class="btn ghost" id="fcPrev">→ הקודמת</button>
+      <button class="btn ghost" id="fcAuto">▶ כל הסט</button>
+      <button class="btn ghost" id="fcNext">הבאה ←</button>
+    </div>
+  </div>
+  <div class="panel plist hidden" id="pvList"></div>
+  <div class="readybar"><button class="btn" id="ready">אני מוכן, להתחיל!</button></div>
+</section>
+
+<section id="game" class="hidden">
+  <div class="hud">
+    <span><b id="setName"></b> · <b id="qn">1</b>/<b id="qt">20</b></span>
+    <span>ניקוד <b id="score">0</b> · רצף <b id="streak">0</b></span>
+    <button class="btn ghost small" id="quit">יציאה</button>
+  </div>
+  <div class="wordcard">
+    <div class="word" id="word">word</div>
+    <button class="speak" id="speak" aria-label="השמעת המילה">🔊</button>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="fb" aria-live="polite"></div>
+</section>
+
+<section id="results" class="hidden">
+  <div class="panel center">
+    <div class="big" id="resPct">0%</div>
+    <p id="resText" style="color:var(--muted)"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="nextSet">לסט הבא</button>
+      <button class="btn ghost" id="again">שוב את הסט הזה</button>
+      <button class="btn ghost" id="practiceMiss">תרגול הטעויות</button>
+      <button class="btn ghost" id="home">למסך הראשי</button>
+    </div>
+  </div>
+  <div class="panel" id="missPanel">
+    <h2>מילים לחזור עליהן</h2>
+    <div class="miss" id="missList"></div>
+  </div>
+</section>
+
+</div>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const BUILTIN = [["addition","תוספת","A"],["advance","התקדמות","A"],["advanced","מתקדם","A"],["advertising","פרסום","A"],["among other things","בין היתר","A"],["analysis","ניתוח","A"],["appear","להיראות","A"],["approach","לגשת ל-; גישה, שיטה","A"],["as","כאשר, בזמן ש-","A"],["at least","לפחות","A"],["average","ממוצע, רגיל","A"],["be responsible for sth/doing sth","להיות אחראי על","A"],["before","לפני (בסדר)","A"],["besides","חוץ מ-, בנוסף","A"],["can","יכול (לפעמים קורה)","A"],["challenge","לערער על, לקרוא תיגר","A"],["chance","סיכון","A"],["change","כסף קטן, עודף; שינוי","A"],["characteristic","תכונה, מאפיין","A"],["claim","לטעון","A"],["come after/first/last, etc","להגיע אחרי / ראשון / אחרון","A"],["common","משותף","A"],["complicated","מסובך","A"],["concern","לעסוק ב-, לנגוע ל-","A"],["conditions","תנאים","A"],["conduct","לבצע, לערוך","A"],["consequence","תוצאה, השלכה","A"],["considerable","ניכר, משמעותי","A"],["cope","להתמודד","A"],["critic","מבקר","A"],["current","נוכחי, עכשווי","A"],["decrease","ירידה; לרדת, להפחית","A"],["delayed","מעוכב, נדחה","A"],["deliberately","בכוונה","A"],["demonstrate","להפגין","A"],["design","עיצוב","A"],["destruction","הרס","A"],["development","התפתחות","A"],["disagreement","מחלוקת, אי הסכמה","A"],["disaster","אסון","A"],["discovery","תגלית","A"],["dislike","לא לאהוב; סלידה","A"],["do","(הדגשה) באמת","A"],["doubt","לפקפק","A"],["drop","לרדת, לצנוח","A"],["educate","לחנך","A"],["efficient","יעיל","A"],["emphasis","דגש","A"],["enjoyable","מהנה","A"],["essay","חיבור","A"],["essentially","ביסודו, בעיקרו של דבר","A"],["even if","גם אם","A"],["even though","למרות ש-","A"],["event","אירוע","A"],["exactly","בדיוק","A"],["except that","אלא ש-, חוץ מזה ש-","A"],["exist","להתקיים","A"],["extraordinary","יוצא דופן","A"],["feature","מאפיין","A"],["feedback","משוב","A"],["figure","גזרה, מבנה גוף","A"],["financial","כספי, פיננסי","A"],["finding/findings","ממצא / ממצאים","A"],["flexible","גמיש","A"],["flood","שיטפון; להציף","A"],["flu","שפעת","A"],["focus on/upon sb/sth","להתמקד ב-","A"],["focus","מוקד, מיקוד","A"],["frequent","תכוף","A"],["fresh","חדש, טרי","A"],["frighten","להפחיד","A"],["from","מ-, מן","A"],["gain","לצבור, להרוויח; עלייה","A"],["generate","לייצר, ליצור","A"],["guidance","הדרכה, הכוונה","A"],["hopefully","בתקווה ש-","A"],["ideal","אידיאלי","A"],["illness","מחלה","A"],["illustrate","לאייר, להמחיש","A"],["image","תמונה, דימוי","A"],["in","ב- (במצב, ברגש)","A"],["in … terms / in terms of sth","במונחי, מבחינת","A"],["in actual fact","למעשה","A"],["in connection with sth","בקשר ל-","A"],["in that case","במקרה כזה","A"],["in the meantime","בינתיים","A"],["initial","ראשוני, התחלתי","A"],["instruction","הוראה, הדרכה","A"],["intelligence","אינטליגנציה, תבונה","A"],["interest","תחביב, תחום עניין","A"],["introduce","להנהיג, להכניס (דבר חדש)","A"],["invest","להשקיע","A"],["investigate","לחקור","A"],["just about","כמעט","A"],["keep on doing sth","להמשיך לעשות","A"],["kind of","די, במידה מסוימת","A"],["knowledge","ידיעה, מודעות","A"],["lack","לחסור, להיות חסר","A"],["landscape","נוף","A"],["likely","סביר, צפוי","A"],["limited","מוגבל","A"],["little","קטן","A"],["look at sth","לבחון, לבדוק","A"],["low","נמוך, במידה מועטה","A"],["material","חומר (מסמכים, מידע)","A"],["mean","להיות בעל משמעות, להתכוון","A"],["means","אמצעי, דרך","A"],["measure","צעד, אמצעי","A"],["mention","להזכיר; אזכור","A"],["miss","להחמיץ, לפספס","A"],["misunderstand","לא להבין נכון","A"],["more or less","פחות או יותר","A"],["must","כנראה, בטח (מסקנה)","A"],["naturally","כמובן, באופן טבעי","A"],["nature","אופי, טבע","A"],["necessarily","בהכרח","A"],["nevertheless","אף על פי כן","A"],["not at all","בכלל לא","A"],["not only","לא רק","A"],["notice","הודעה מוקדמת","A"],["objective","מטרה, יעד","A"],["occasional","מזדמן, לעיתים","A"],["official","רשמי","A"],["on the one hand ... on the other hand","מצד אחד... מצד שני","A"],["once","ברגע ש-","A"],["others","אחרים","A"],["otherwise","אחרת","A"],["out of date","מיושן, לא עדכני","A"],["participate","להשתתף","A"],["particular","מסוים, מיוחד","A"],["past","קודם, שעבר","A"],["perform","לבצע, לתפקד","A"],["personality","אישיות","A"],["personally","באופן אישי","A"],["planet","כוכב לכת","A"],["planning","תכנון","A"],["plant","לשתול","A"],["point of view","נקודת מבט","A"],["policy","מדיניות","A"],["pollution","זיהום","A"],["popular","נפוץ, רווח","A"],["population","אוכלוסייה","A"],["prevent","למנוע","A"],["priority","עדיפות","A"],["private","פרטי","A"],["probable","סביר, אפשרי","A"],["produce","להפיק (סרט, תוכנית)","A"],["profession","מקצוע","A"],["professor","פרופסור","A"],["proof","הוכחה","A"],["proposed","מוצע","A"],["protest","מחאה; למחות","A"],["provided (that)","בתנאי ש-","A"],["psychology","פסיכולוגיה","A"],["public","ציבורי","A"],["purpose","מטרה, כוונה","A"],["quality","תכונה","A"],["question","לחקור, לתשאל","A"],["question","שאלה, סוגיה","A"],["questionnaire","שאלון","A"],["react","להגיב","A"],["reasonable","סביר, הוגן (מחיר)","A"],["recommend","להמליץ","A"],["recycle","למחזר","A"],["regard","להתייחס ל-, לראות כ-","A"],["region","אזור","A"],["regular","רגיל","A"],["relevant","רלוונטי","A"],["reliable","אמין","A"],["rely on/upon sb/sth","לסמוך על","A"],["request","בקשה; לבקש","A"],["research","מחקר; לחקור","A"],["result","תוצאה","A"],["review","ביקורת; לבקר, לסקור","A"],["revise","לשנות, לערוך מחדש; לחזור על חומר","A"],["risk","סיכון; לסכן","A"],["run out of","להיגמר ל-","A"],["rural","כפרי","A"],["salary","משכורת","A"],["sample","דוגמה, מדגם","A"],["seldom","לעיתים רחוקות","A"],["sense","היגיון, שיקול דעת","A"],["set up sth or set sth up","להקים, לייסד","A"],["significant","משמעותי","A"],["skilled","מיומן","A"],["slight","קל, קטן","A"],["specialist","מומחה","A"],["specific","מסוים, ספציפי","A"],["still","בכל זאת, עדיין","A"],["structure","מבנה","A"],["study","לחקור, לבחון; לימוד, מחקר","A"],["supposed","כביכול, לכאורה","A"],["surface","פני השטח, משטח","A"],["take advantage of sth","לנצל","A"],["thanks to sb/sth","בזכות","A"],["theory","תיאוריה","A"],["throw away/out sth or throw sth away/out","לזרוק","A"],["transport","תחבורה; להוביל","A"],["trash","זבל, אשפה","A"],["treatment","יחס, טיפול","A"],["unfortunately","למרבה הצער","A"],["unhealthy","לא בריא","A"],["unique","ייחודי","A"],["united","מאוחד","A"],["universe","יקום","A"],["unknown","לא ידוע","A"],["unlike","בניגוד ל-","A"],["unlikely","לא סביר","A"],["urban","עירוני","A"],["vary","להשתנות, להשתנות מ-","A"],["view","השקפה, דעה","A"],["visible","נראה, גלוי לעין","A"],["vision","חזון","A"],["volume","נפח, כמות","A"],["whom","את מי, למי","A"],["wildlife","חיות בר","A"],["within","בתוך, תוך","A"],["worthwhile","כדאי, שווה","A"],["would","(עבר של will)","A"],["above","הנ\"ל, שלמעלה","B"],["account","דיווח, תיאור","B"],["acquire","לרכוש","B"],["age","תקופה, עידן","B"],["agriculture","חקלאות","B"],["all of a sudden","לפתע","B"],["altogether","לגמרי, בסך הכל","B"],["anxious","מודאג, חרד","B"],["apparent","גלוי, נראה","B"],["appropriate","מתאים, הולם","B"],["atmosphere","אווירה, אטמוספרה","B"],["automatically","באופן אוטומטי","B"],["bad","רקוב, מקולקל","B"],["be in charge","להיות אחראי","B"],["be situated in/on/by, etc","להיות ממוקם ב-","B"],["behind","בפיגור, מאחור","B"],["believe in sth","להאמין ב-","B"],["blame","אשמה","B"],["block","לחסום","B"],["brilliant","מבריק, גאוני","B"],["bring up sb or bring sb up","לגדל (ילד)","B"],["calculate","לחשב","B"],["clothing","ביגוד","B"],["competitive","תחרותי","B"],["contemporary","עכשווי, בן זמננו","B"],["contest","תחרות","B"],["continent","יבשת","B"],["copy","עותק","B"],["criterion","קריטריון, אמת מידה","B"],["cut down sth or cut sth down","לצמצם; לכרות","B"],["decade","עשור","B"],["declare","להכריז","B"],["degree","תואר","B"],["deliver","למסור, לספק","B"],["demanding","תובעני, דורש מאמץ","B"],["detect","לגלות, לזהות","B"],["determine","לקבוע","B"],["differ","לחלוק על, לא להסכים","B"],["differ","להיות שונה","B"],["disappointed","מאוכזב","B"],["divide","לחלק","B"],["domestic","מקומי, פנים ארצי","B"],["done","גמור, מוכן","B"],["double","להכפיל; פי שניים","B"],["economical","חסכוני","B"],["editor","עורך","B"],["either way","כך או כך","B"],["element","יסוד, רכיב","B"],["emerge","לצוץ, להופיע","B"],["emotion","רגש","B"],["exception","יוצא מן הכלל","B"],["exchange","להחליף","B"],["expected","צפוי","B"],["expedition","משלחת","B"],["expense","הוצאה","B"],["export","ייצוא; לייצא","B"],["expression","ביטוי","B"],["extend","להאריך","B"],["extreme","קיצוני","B"],["farther/further","רחוק יותר; נוסף","B"],["fed up","נמאס, מאס","B"],["fetch","להביא","B"],["final","גמר","B"],["fit","בכושר","B"],["generation","דור","B"],["genuine","אמיתי, מקורי","B"],["get rid of sth","להיפטר מ-","B"],["get sth wrong","לטעות ב-","B"],["get worse","להחמיר","B"],["give away sth or give sth away","לחלק, למסור; לגלות סוד","B"],["go out","לצאת (לבלות); לכבות","B"],["hidden","נסתר, מוסתר","B"],["highlight","להדגיש","B"],["historian","היסטוריון","B"],["historic","היסטורי (בעל חשיבות)","B"],["identical","זהה","B"],["immigration","הגירה","B"],["import","ייבוא; לייבא","B"],["impress","להרשים","B"],["impression","רושם","B"],["incredible","לא ייאמן","B"],["indoors","בתוך הבית, בפנים","B"],["infection","זיהום","B"],["input","קלט, תרומה","B"],["inside","בפנים, בתוך תוכו","B"],["interaction","אינטראקציה, קשר הדדי","B"],["interpret","לתרגם (בעל פה)","B"],["interrupt","להפריע, לקטוע","B"],["involvement","מעורבות","B"],["issue","סוגיה, נושא","B"],["it looks like/as if/as though","נראה ש-, נראה כאילו","B"],["jam","פקק תנועה","B"],["journalist","עיתונאי","B"],["judgment","שיקול דעת","B"],["just as bad / good / tall /clever, etc (as sb/sth)","בדיוק כמו, באותה מידה","B"],["justice","צדק","B"],["keen","להוט, נלהב","B"],["keep","לעכב","B"],["kit","ערכה","B"],["learn","לשנן, ללמוד בעל פה","B"],["lecture","הרצאה; להרצות","B"],["light","להאיר","B"],["living","פרנסה, מחיה","B"],["logical","הגיוני","B"],["look forward to sth/doing sth","לצפות בקוצר רוח ל-","B"],["lower","להוריד, להנמיך","B"],["make sense","להיות הגיוני","B"],["make up sth or make sth up","להמציא","B"],["make up your mind or make your mind up","להחליט","B"],["mend","לתקן","B"],["mixture","תערובת","B"],["monthly","חודשי","B"],["mystery","תעלומה","B"],["name","לנקוב בשם","B"],["native","יליד, מקומי","B"],["neither … nor","לא... וגם לא","B"],["nightmare","סיוט","B"],["nonsense","שטויות","B"],["not believe / understand / hear / say, etc. a word","לא להאמין / להבין אף מילה","B"],["not until","רק כאשר, לא לפני","B"],["occupation","מקצוע, עיסוק","B"],["occupy","לתפוס, למלא (מקום, זמן)","B"],["oil","נפט","B"],["on the whole","בסך הכל, באופן כללי","B"],["open","לפתוח רשמית","B"],["operate","לנתח (ניתוח)","B"],["organ","איבר","B"],["organization","ארגון, סידור","B"],["outstanding","מצטיין, יוצא מן הכלל","B"],["part-time","במשרה חלקית","B"],["patient","סבלני","B"],["peculiar","מוזר, משונה","B"],["place","מקום (בתחרות, באוניברסיטה)","B"],["point","נקודה (בזמן או מקום)","B"],["point","לכוון, להפנות","B"],["position","מצב","B"],["potential","פוטנציאל","B"],["preference","העדפה","B"],["present","להעניק, להגיש","B"],["pressure","לחץ","B"],["prime","עיקרי, ראשי","B"],["principal","עיקרי; מנהל בית ספר","B"],["promote","לקדם בתפקיד","B"],["put up with sth/sb","לסבול, להשלים עם","B"],["reach","להגיע, להושיט יד","B"],["reason","היגיון, שכל ישר","B"],["record","לתעד, להקליט","B"],["reflect","לשקף, להשתקף","B"],["register","להירשם; מרשם","B"],["regret","להתחרט; חרטה","B"],["relate","לקשר, להתייחס","B"],["relax","להירגע","B"],["remark","הערה; להעיר","B"],["remote","מרוחק, נידח","B"],["replace","להחליף","B"],["rescue","להציל; הצלה","B"],["respect","לכבד; כבוד","B"],["retire","לפרוש לגמלאות","B"],["right","נכון, מוסרי","B"],["role","תפקיד","B"],["room","מקום, מרחב","B"],["rough","משוער, בערך","B"],["rule","כלל, תקנה","B"],["rule","לשלוט, למשול","B"],["run","לנהל, להפעיל","B"],["rush","למהר; חיפזון","B"],["satisfy","לספק, להשביע רצון","B"],["scale","קנה מידה, היקף","B"],["scene","סצנה, מערכה","B"],["schedule","לוח זמנים","B"],["sensitive","רגיש","B"],["service","שירות","B"],["set","קבוע, מוגדר מראש","B"],["setting","רקע, תפאורה (בסיפור)","B"],["shortly","בקרוב, תוך זמן קצר","B"],["shut (sth) down or shut down (sth)","לסגור, להשבית","B"],["similarity","דמיון","B"],["slow (sb/sth) down / up or slow down/up (sb/sth)","להאט","B"],["so-called","מה שנקרא, כביכול","B"],["society","אגודה, מועדון","B"],["sooner or later","במוקדם או במאוחר","B"],["spectacular","מרהיב","B"],["speech","נאום","B"],["spoil","לקלקל; לפנק","B"],["start (sth) off or start off (sth)","להתחיל, לפתוח","B"],["style","סגנון","B"],["sum up (sth/sb) or sum (sth/sb) up","לסכם","B"],["summary","סיכום","B"],["support","לתמוך, לעודד; לפרנס","B"],["survive","לשרוד","B"],["take into account sth","להביא בחשבון","B"],["take part","להשתתף","B"],["take place","להתרחש","B"],["take the/this opportunity to do sth","לנצל את ההזדמנות","B"],["take sb/sth seriously","להתייחס ברצינות","B"],["take/accept/claim responsibility for sth","לקחת אחריות על","B"],["the headlines","הכותרות","B"],["the heart of sth","הלב של, מרכז העניין","B"],["the main thing","העיקר","B"],["the reality/realities of sth","המציאות של","B"],["theme","נושא מרכזי","B"],["to","עד (טווח)","B"],["to start with","ראשית, מלכתחילה","B"],["treasure","אוצר","B"],["try","ניסיון","B"],["turn","תור, הזדמנות","B"],["uncomfortable","לא נוח","B"],["underneath","מתחת","B"],["understand","להבין, לגלות הבנה","B"],["undo","לבטל; לפתוח, להתיר","B"],["unemployed","מובטל","B"],["unexpected","בלתי צפוי","B"],["up-to-date","מעודכן","B"],["urgent","דחוף","B"],["use up sth or use sth up","לנצל עד הסוף, לגמור","B"],["virtual reality","מציאות מדומה","B"],["vowel","תנועה (אות ניקוד)","B"],["waste","לבזבז; מבוזבז","B"],["wealth","עושר","B"],["welcome","לקבל בברכה; רצוי","B"],["wherever","בכל מקום ש-, לאן ש-","B"],["(all) on your own","לבד, בכוחות עצמך","C"],["(at) any minute; any minute now","בכל רגע","C"],["(be) in your twenties / 20s /thirties/30s, etc","להיות בשנות העשרים / השלושים","C"],["absorb","לספוג","C"],["access","גישה; לגשת","C"],["ambition","שאיפה, אמביציה","C"],["annoy","להרגיז, לעצבן","C"],["argue","לטעון","C"],["as a matter of fact","למעשה, לאמיתו של דבר","C"],["ashamed","מתבייש","C"],["aside","הצידה","C"],["assure","להבטיח, להרגיע","C"],["at his/its, etc. best","במיטבו","C"],["attraction","אטרקציה; משיכה","C"],["awareness","מודעות","C"],["barely","בקושי","C"],["barrier","מחסום","C"],["be (just) about to do sth","לעמוד לעשות","C"],["be out of sth","להיגמר ל- (אין עוד)","C"],["beat","קצב","C"],["bend","לכופף; עיקול","C"],["biology","ביולוגיה","C"],["bitter","מר","C"],["bold","נועז, אמיץ","C"],["bother","להטריד","C"],["bottom","תחתון","C"],["breeze","רוח קלה, בריזה","C"],["brilliant","זוהר, בהיר","C"],["can tell","לזהות, להבחין","C"],["capacity","קיבולת","C"],["cash","לפדות (צ'ק)","C"],["capture","ללכוד","C"],["casual","לא רשמי, יומיומי","C"],["ceremony","טקס","C"],["chairperson","יושב ראש","C"],["chase","לרדוף; מרדף","C"],["cheat","לרמות; רמאי","C"],["classic","קלאסי","C"],["clinic","מרפאה","C"],["coach","מאמן; לאמן","C"],["collector","אספן","C"],["correspond","להתכתב","C"],["costume","תחפושת","C"],["courage","אומץ","C"],["cover","לסקר (חדשות)","C"],["cure","לרפא; תרופה","C"],["cyberbullying","בריונות ברשת","C"],["cycle","לרכוב על אופניים","C"],["deaf","חירש","C"],["debt","חוב","C"],["decorate","לקשט","C"],["dedicate","להקדיש","C"],["departure","יציאה, עזיבה","C"],["deposit","פיקדון, מקדמה","C"],["deserve","להיות ראוי ל-","C"],["destination","יעד","C"],["direct","לביים","C"],["disabled","בעל מוגבלות, נכה","C"],["dispute","סכסוך, מחלוקת","C"],["distinguish","להבחין","C"],["disturb","להפריע","C"],["do a good/excellent, etc. job","לעשות עבודה טובה","C"],["dozen","תריסר","C"],["draft","טיוטה","C"],["dramatic","דרמטי","C"],["earth","אדמה","C"],["earthquake","רעידת אדמה","C"],["elderly","קשיש, מבוגר","C"],["enter","להזין (מידע)","C"],["episode","פרק","C"],["equal","להשתוות ל-","C"],["escape","בריחה","C"],["fare","מחיר נסיעה","C"],["fire","לפטר","C"],["firm","יציב, מוצק","C"],["float","לצוף","C"],["fold","לקפל","C"],["follow","להבין, לעקוב","C"],["for the sake of sth/sb; for sth's/sb's sake","למען, לטובת","C"],["formal","רשמי","C"],["former","לשעבר, קודם","C"],["fortune","הון","C"],["free","חופשי","C"],["free will","רצון חופשי","C"],["frozen","קפוא","C"],["generous","נדיב","C"],["get","לענות (לטלפון, לדלת)","C"],["get in touch","ליצור קשר","C"],["give in/up","להיכנע, לוותר","C"],["give up sth or give sth up","לוותר על, להפסיק","C"],["go ahead","להמשיך, להתקדם","C"],["grab","לחטוף, לתפוס","C"],["grateful","אסיר תודה","C"],["hardware","חומרה","C"],["headquarters","מטה","C"],["here you are/here it is, etc.","הנה, בבקשה","C"],["hold up / hold up sb/sth or hold sb/sth up","לעכב","C"],["honesty","יושר","C"],["idiom","ניב, ביטוי","C"],["in turn","בתורו, בזה אחר זה","C"],["incident","תקרית","C"],["laugh","צחוק","C"],["layer","שכבה","C"],["leave behind sb/sth or leave sb/sth behind","להשאיר מאחור","C"],["let out sb/sth or let sb/sth out","לשחרר, להוציא","C"],["let sb/sth in / past / through, etc","להכניס, לתת לעבור","C"],["light","להדליק","C"],["lightly","קלות, בעדינות","C"],["liquid","נוזל; נוזלי","C"],["lively","תוסס, מלא חיים","C"],["load","לטעון (מחשב)","C"],["loan","הלוואה; להלוות","C"],["log in/on","להתחבר","C"],["log off/out","להתנתק","C"],["lonely","בודד","C"],["look","מבט","C"],["lose interest / patience, etc","לאבד עניין / סבלנות","C"],["maker","יצרן","C"],["mark","סימן, כתם","C"],["marvelous","נפלא","C"],["mayor","ראש עיר","C"],["melt","להמס, להימס","C"],["membership","חברות (בארגון)","C"],["message","מסר","C"],["might as well","כדאי כבר, אפשר באותה מידה","C"],["miss","החטאה","C"],["modest","צנוע","C"],["mood","מצב רוח","C"],["name","שם, מוניטין","C"],["off","הנחה; בחופש","C"],["offense","עבירה","C"],["(every) once in a while","מדי פעם","C"],["or so","בערך, בערך כך","C"],["organic","אורגני","C"],["pace","קצב","C"],["partner","שותף","C"],["pause","הפסקה קצרה","C"],["peaceful","שליו, שקט","C"],["plot","עלילה","C"],["position","דרגה, עמדה","C"],["pour","לרדת בשפע (גשם)","C"],["powder","אבקה","C"],["preposition","מילת יחס","C"],["pride","גאווה","C"],["punish","להעניש","C"],["quarrel","מריבה; לריב","C"],["quit","לעזוב, להפסיק","C"],["race","גזע","C"],["raw","נא, גולמי","C"],["reassure","להרגיע","C"],["remain calm/open, etc","להישאר רגוע / פתוח","C"],["reserve","להזמין מראש, לשריין","C"],["server","שרת","C"],["shame","חבל, בושה","C"],["shaming","ביוש","C"],["shelter","מחסה, מקלט; לחסות","C"],["show up","להופיע, להגיע","C"],["side","צד","C"],["sign","לחתום","C"],["signal","אות, רמזור","C"],["sink","לשקוע, לטבוע","C"],["slip","להחליק; החלקה","C"],["smart","חכם; מהודר","C"],["smooth","חלק","C"],["so did we/so have I/so is mine, etc.","גם אנחנו, גם אני","C"],["some kind of","סוג של","C"],["somewhere around / between, etc.","איפשהו בסביבות","C"],["sound angry / happy / rude, etc.","להישמע כועס / שמח","C"],["speak about/of sth","לדבר על","C"],["special offer","מבצע","C"],["speed","מהירות","C"],["spill","לשפוך","C"],["spirit","רוח, מורל","C"],["spread","להתפשט, להפיץ; התפשטות","C"],["stay","שהייה","C"],["strengthen","לחזק","C"],["strike","שביתה; לשבות","C"],["strong","חזק","C"],["struggle","להיאבק; מאבק","C"],["subway","רכבת תחתית","C"],["suffer from sth","לסבול מ-","C"],["super","מעולה, נהדר","C"],["swear","להישבע","C"],["suspect","לחשוד; חשוד","C"],["switch","מתג","C"],["symbol","סמל","C"],["table","טבלה","C"],["take pleasure/pride/an interest, etc.","ליהנות מ- / להתגאות ב-","C"],["take sb's place","לתפוס את מקומו של","C"],["tear","לקרוע; קרע","C"],["term","תנאי","C"],["terminal","טרמינל, מסוף","C"],["that kind/sort of thing","דברים מהסוג הזה","C"],["that's it","זהו, זה הכל","C"],["the following day / morning, etc.","למחרת","C"],["thief","גנב","C"],["tight","צמוד, הדוק","C"],["tip","עצה, טיפ","C"],["tired of doing sth","נמאס לו מ-","C"],["tiring","מעייף","C"],["touch","מגע, נגיעה","C"],["tough","קשה, קשוח","C"],["trade","מקצוע, מלאכה","C"],["transfer","להעביר","C"],["tribe","שבט","C"],["trick","תעלול, טריק; להערים","C"],["turn (sb/sth) into sb/sth","להפוך ל-","C"],["underline","להדגיש","C"],["union","איגוד עובדים","C"],["use","שימוש; להשתמש","C"],["via","דרך, באמצעות","C"],["victim","קורבן","C"],["warm","לחמם","C"],["weakness","חולשה","C"],["wear (sth) out or wear out (sth)","לשחוק, להתבלות","C"],["weather forecast","תחזית מזג אוויר","C"],["weigh","לשקול","C"],["weird","מוזר","C"],["whatever","מה ש-, כל מה ש-","C"],["Who cares?","למי אכפת?","C"],["wise","נבון, חכם","C"],["wrap","לעטוף","C"],["Yours sincerely","בכבוד רב","C"],["will","רצון","C"],["a little sth","קצת, מעט","D"],["aggressive","תוקפני","D"],["air force","חיל האוויר","D"],["alarm","אזעקה, שעון מעורר","D"],["all is well","הכל בסדר","D"],["all over the place","בכל מקום, מפוזר","D"],["ambassador","שגריר","D"],["arrow","חץ","D"],["artistic","אמנותי","D"],["at fault","אשם","D"],["bank","גדת נהר","D"],["bank account","חשבון בנק","D"],["bargain","מציאה","D"],["base","בסיס","D"],["bay","מפרץ","D"],["be expecting (a baby)","לצפות לתינוק","D"],["believe it or not","תאמינו או לא","D"],["bell","פעמון","D"],["bench","ספסל","D"],["blow up (sth/sb) or blow (sth/sb) up","לפוצץ; לנפח","D"],["boiled","מבושל, רתוח","D"],["brake","בלם; לבלום","D"],["branch","סניף","D"],["brick","לבנה","D"],["bucket","דלי","D"],["bug","חרק; באג","D"],["bull","שור","D"],["bunch","צרור, חבורה","D"],["burst into tears","לפרוץ בבכי","D"],["bury","לקבור","D"],["butcher","קצב","D"],["cab","מונית","D"],["cabin","בקתה, תא","D"],["catalog/catalogue","קטלוג","D"],["cave","מערה","D"],["certificate","תעודה","D"],["charge","להטעין","D"],["check in/check out","להירשם / לעזוב (מלון, טיסה)","D"],["Cheers!","לחיים!","D"],["cold","קר, לא ידידותי","D"],["collar","צווארון","D"],["crash","להתרסק; התרסקות","D"],["cross","צלב, איקס","D"],["customs","מכס","D"],["date","פגישה רומנטית","D"],["deck","סיפון","D"],["defeat","להביס; תבוסה","D"],["devil","שטן","D"],["diagram","תרשים","D"],["difficult","קשה, לא נעים","D"],["dishonest","לא ישר","D"],["disk","דיסק","D"],["divorce","גירושין","D"],["Don't ask me!","אל תשאל אותי!","D"],["Don't ask!","אל תשאל!","D"],["dreadful","נורא, איום","D"],["drink","לשתות (אלכוהול)","D"],["drive","כונן","D"],["drop","טיפה","D"],["drunk","שיכור","D"],["elbow","מרפק","D"],["engagement","אירוסין","D"],["explode","להתפוצץ","D"],["fall in love","להתאהב","D"],["fasten","להדק, לחגור","D"],["fly","זבוב","D"],["folk","עממי; אנשים","D"],["fool","טיפש","D"],["for fun or for the fun of it","בשביל הכיף","D"],["force","כוח (צבאי, משטרתי)","D"],["forehead","מצח","D"],["forgetful","שכחן","D"],["garage","מוסך","D"],["gate","שער (בשדה תעופה)","D"],["gentleman","ג'נטלמן","D"],["get away with sth","לצאת מזה בלי עונש","D"],["get in","להיכנס, להגיע","D"],["ghost","רוח רפאים","D"],["giant","ענק","D"],["grow tired/old/calm, etc.","להתעייף / להזדקן / להירגע","D"],["hang about/around","לשוטט, להסתובב","D"],["hang out","לבלות","D"],["harbor","נמל","D"],["heaven","גן עדן","D"],["heel","עקב","D"],["hell","גיהינום","D"],["horror","אימה","D"],["hunt","לצוד, לחפש","D"],["hurry up sb/sth or hurry sb/sth up","לזרז, למהר","D"],["hut","צריף, בקתה","D"],["immoral","לא מוסרי","D"],["in tears","בוכה, בדמעות","D"],["initial","אות ראשונה (ראשי תיבות)","D"],["insult","להעליב","D"],["insurance","ביטוח","D"],["iron","לגהץ; מגהץ, ברזל","D"],["jog","לרוץ ריצה קלה","D"],["jump","לקפוץ (מבהלה)","D"],["jury","חבר מושבעים","D"],["knit","לסרוג","D"],["laser","לייזר","D"],["lead","הובלה (בתחרות)","D"],["learning","למידה, השכלה","D"],["lightning","ברק","D"],["literary","ספרותי","D"],["loaf","כיכר לחם","D"],["loose","רופף, רחב","D"],["madam","גברתי","D"],["magnificent","מפואר, נהדר","D"],["make","להגיע (בזמן)","D"],["marriage","נישואים","D"],["mask","מסכה","D"],["mate","חבר, שותף","D"],["mess","בלגן","D"],["mineral water","מים מינרליים","D"],["mix up sb/sth or mix sb/sth up","לבלבל","D"],["monster","מפלצת","D"],["moral","מוסר השכל","D"],["naked","עירום","D"],["nasty","מגעיל, רע","D"],["navy","חיל הים","D"],["neat","מסודר","D"],["next door","בבית הסמוך, השכן","D"],["not believe your eyes/ears","לא להאמין למראה עיניו","D"],["nut","אגוז","D"],["on a diet","בדיאטה","D"],["on board","על הסיפון, על המטוס","D"],["on display","מוצג","D"],["on duty/off duty","בתורנות / לא בתורנות","D"],["orchestra","תזמורת","D"],["pack","חבילה","D"],["painful","כואב","D"],["pale","חיוור","D"],["passage","מעבר","D"],["pavement","מדרכה","D"],["peak","פסגה, שיא","D"],["penalty","עונש; פנדל","D"],["pill","כדור, גלולה","D"],["pin","סיכה","D"],["pity","רחמים; חבל","D"],["pray","להתפלל","D"],["pregnant","בהריון","D"],["priest","כומר","D"],["propose","להציע נישואים","D"],["pump","משאבה; לשאוב","D"],["queue","תור","D"],["racket","מחבט","D"],["rainbow","קשת בענן","D"],["range","רכס הרים","D"],["refund","החזר כספי; להחזיר כסף","D"],["regards","דרישת שלום","D"],["republic","רפובליקה","D"],["resort","אתר נופש","D"],["rob","לשדוד","D"],["romantic","רומנטי","D"],["rope","חבל","D"],["rub out sth or rub sth out","למחוק","D"],["rubber","גומי","D"],["rubbish","זבל; שטויות","D"],["rude","גס רוח","D"],["scandal","שערורייה","D"],["scratch","שריטה; לשרוט","D"],["sculpture","פסל","D"],["see off sb or see sb off","ללוות (לפרידה)","D"],["selfish","אנוכי","D"],["separate","להיפרד","D"],["shade","צל","D"],["shake your head","לנענע בראש","D"],["shave","להתגלח; גילוח","D"],["shore","חוף","D"],["show sb around / round","להראות את המקום, לערוך סיור","D"],["shut (sb) up","לשתוק; להשתיק","D"],["sidewalk","מדרכה","D"],["sigh","לאנוח; אנחה","D"],["silk","משי","D"],["sit up/stand up straight","לשבת / לעמוד זקוף","D"],["slave","עבד","D"],["sleeve","שרוול","D"],["sore","כואב","D"],["split up","להיפרד","D"],["sportsman","ספורטאי","D"],["spot","להבחין","D"],["spy","מרגל; לרגל","D"],["squeeze","לסחוט, ללחוץ","D"],["stare","לבהות; מבט ממושך","D"],["stay over","להישאר ללון","D"],["stay up","להישאר ער","D"],["steep","תלול","D"],["step back / forward / over, etc.","לצעוד אחורה / קדימה","D"],["step on/in sth","לדרוך על / ב-","D"],["stick","מקל","D"],["strangely enough","באופן מוזר","D"],["stream","נחל","D"],["stretch","למתוח; מתיחה","D"],["strict","קפדני, מחמיר","D"],["string","חוט; מיתר","D"],["stripe","פס","D"],["suit","להלום, להתאים","D"],["swear","לקלל","D"],["sweep","לטאטא","D"],["sword","חרב","D"],["tail","זנב","D"],["take a risk","לקחת סיכון","D"],["take sb out or take out sb","להוציא לבילוי, להזמין","D"],["tap","ברז","D"],["temple","מקדש","D"],["territory","שטח, טריטוריה","D"],["terror","אימה, טרור","D"],["tie sb/sth up or tie up sb/sth","לקשור","D"],["tournament","טורניר","D"],["track","מסלול ריצה","D"],["tragedy","טרגדיה","D"],["triangle","משולש","D"],["tube","צינור, שפופרת","D"],["undressed","לא לבוש","D"],["unpack","לפרוק (מזוודה)","D"],["van","טנדר, מסחרית","D"],["verse","בית (בשיר)","D"],["weapon","נשק","D"],["web","קורי עכביש","D"],["wheat","חיטה","D"]].map(([en,he,list]) => ({en,he,list}));
+const ld = (k,d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch(e) { return d; } };
+const sv = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+let custom = ld('vb-custom', []);         // words the user added
+let best = ld('vb-best-off', {});             // "size:list:index" -> best %
+let listSel = ld('vb-list', 'all');
+const bestKey = i => size+':'+listSel+':'+i;
+let missBank = ld('vb-miss', []);         // english words answered wrong
+let size = ld('vb-size', 20), secs = ld('vb-secs', 15);
+let words = [];
+// Fixed random order: sets are mixed (not alphabetical) but stay the same every time, so progress per set is meaningful
+const MIXED = (() => {
+  let s = 20261023;
+  const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const a = BUILTIN.slice();
+  for (let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+})();
+function rebuild(){
+  const seen = new Set(BUILTIN.map(w => w.en.toLowerCase()));
+  words = listSel === 'all'
+    ? MIXED.concat(custom.filter(w => !seen.has(w.en.toLowerCase())))
+    : MIXED.filter(w => w.list === listSel);
+}
+rebuild();
+missBank = missBank.filter(e => BUILTIN.some(w => w.en === e) || custom.some(w => w.en === e));
+
+function seg(id, val, cb){
+  const el = $(id);
+  el.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', +b.dataset.v === val);
+    b.onclick = () => { el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b)); cb(+b.dataset.v); };
+  });
+}
+seg('segSize', size, v => { size = v; sv('vb-size', v); renderSets(); });
+(() => {
+  const el = $('segList');
+  el.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.v === listSel);
+    b.onclick = () => {
+      el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b));
+      listSel = b.dataset.v; sv('vb-list', listSel); rebuild(); renderBank(); renderSets();
+    };
+  });
+})();
+seg('segTime', secs, v => { secs = v; sv('vb-secs', v); });
+
+const setCount = () => Math.ceil(words.length / size);
+const setWords = i => words.slice(i*size, (i+1)*size);
+
+function renderSets(){
+  const box = $('sets'); box.innerHTML = '';
+  let done = 0;
+  for (let i=0;i<setCount();i++){
+    const b = document.createElement('button'); b.className = 'set';
+    const p = best[bestKey(i)];
+    b.innerHTML = `<span>סט ${i+1}</span><small>${p==null ? '—' : p+'%'}</small>`;
+    if (p != null) b.classList.add(p >= 90 ? 'done' : 'part');
+    if (p >= 90) done++;
+    b.onclick = () => startGame(setWords(i), i);
+    box.append(b);
+  }
+  $('progress').textContent = `${done} מתוך ${setCount()} סטים עם 90%+`;
+  $('mistakesBtn').textContent = `המילים שטעיתי בהן (${missBank.length})`;
+}
+
+function renderBank(){
+  $('count').textContent = words.length;
+  const l = $('list'); l.innerHTML = '';
+  if (l.classList.contains('hidden')) return;
+  const frag = document.createDocumentFragment();
+  words.forEach(w => {
+    const d = document.createElement('div');
+    const en = document.createElement('span'); en.className='en'; en.textContent = w.en;
+    const he = document.createElement('span'); he.textContent = w.he;
+    d.append(he, en); frag.append(d);
+  });
+  l.append(frag);
+}
+$('toggleList').onclick = () => {
+  const l = $('list'); l.classList.toggle('hidden');
+  $('toggleList').textContent = l.classList.contains('hidden') ? 'הצגת הרשימה' : 'הסתרת הרשימה';
+  renderBank();
+};
+$('addText').onclick = () => {
+  const seen = new Set(words.map(w => w.en.toLowerCase()));
+  let added = 0, bad = 0;
+  for (const raw of $('paste').value.split(/\r?\n/)) {
+    const ln = raw.trim(); if (!ln) continue;
+    const m = ln.match(/^([A-Za-z][A-Za-z' .-]*?)\s*(?:[–—:=\t,|]|\s-\s)\s*(.+)$/);
+    if (!m) { bad++; continue; }
+    const en = m[1].trim(), he = m[2].trim();
+    if (seen.has(en.toLowerCase())) continue;
+    seen.add(en.toLowerCase()); custom.push({en, he}); added++;
+  }
+  sv('vb-custom', custom); rebuild(); renderBank(); renderSets(); $('paste').value = '';
+  const s = $('status');
+  s.textContent = `נוספו ${added} מילים (בסטים האחרונים).` + (bad ? ` ${bad} שורות לא זוהו.` : '');
+  s.classList.toggle('err', !added && bad > 0);
+};
+$('resetProgress').onclick = () => {
+  if (confirm('לאפס את כל ההתקדמות ואת רשימת הטעויות?')) { best = {}; missBank = []; sv('vb-best-off', best); sv('vb-miss', missBank); renderSets(); }
+};
+
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+let queue=[], qi=0, score=0, streak=0, missed=[], timerRaf=0, deadline=0, locked=false, current=null, pool=[], setIdx=null;
+function show(id){ ['setup','preview','game','results'].forEach(s => $(s).classList.toggle('hidden', s!==id)); window.scrollTo(0,0); }
+
+function startGame(list, idx, label){
+  if (!list.length) { $('startMsg').textContent = 'אין מילים לתרגול כאן.'; return; }
+  $('startMsg').textContent='';
+  pool = list; setIdx = idx; queue = shuffle([...list]);
+  qi=0; score=0; streak=0; missed=[];
+  $('setName').textContent = label || (idx != null ? `סט ${idx+1}` : 'תרגול');
+  $('qt').textContent = queue.length; $('score').textContent=0; $('streak').textContent=0;
+  renderPreview(list); show('preview');
+}
+function renderPreview(list){
+  $('pvName').textContent = $('setName').textContent;
+  $('pvCount').textContent = list.length;
+  const box = $('pvList'); box.innerHTML = '';
+  list.forEach((w,i) => {
+    const d = document.createElement('div');
+    const n = document.createElement('span'); n.className='n'; n.textContent = i+1;
+    const he = document.createElement('span'); he.className='he'; he.textContent = w.he;
+    const en = document.createElement('button'); en.className='en'; en.textContent = w.en;
+    en.setAttribute('aria-label', 'השמעת ' + w.en);
+    en.onclick = () => { stopAuto(); sayParts([[w.en,'en-US']]); };
+    d.append(n, he, en); box.append(d);
+  });
+  fcList = list; fcI = 0; fcShow(); setMode('cards');
+}
+
+/* flashcards: one word at a time, speaks the English word and then the Hebrew meaning */
+let fcList = [], fcI = 0, fcAutoOn = false, sayToken = 0;
+// Inside the APK: speak through Android's own text-to-speech (the WebView has none)
+const NTTS = (() => { try { const C = window.Capacitor; if (C && C.isNativePlatform && C.isNativePlatform()) return (C.Plugins && C.Plugins.TextToSpeech) || (C.registerPlugin && C.registerPlugin('TextToSpeech')); } catch(e) {} return null; })();
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const TTS_OK = typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
+let voices = [];
+const loadVoices = () => { try { voices = speechSynthesis.getVoices() || []; } catch(e) { voices = []; } };
+if (TTS_OK) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch(e) {} }
+const heVoice = () => voices.find(v => /^(he|iw)/i.test(v.lang));
+const enVoice = () => voices.find(v => /^en[-_]US/i.test(v.lang)) || voices.find(v => /^en/i.test(v.lang));
+function toast(msg){
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role','status');
+    t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));max-width:90%;background:var(--text);color:var(--paper);padding:12px 16px;border-radius:12px;font-size:.95rem;z-index:50;text-align:center;box-shadow:0 4px 16px #0004';
+    document.body.append(t);
+  }
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 5000);
+}
+const NO_TTS = 'ההשמעה לא זמינה בתצוגה הזו. פתחו את הקישור בדפדפן כרום כדי לשמוע.';
+function sayParts(parts, done){
+  const tok = ++sayToken;
+  if (NTTS) {
+    (async () => {
+      try { await NTTS.stop(); } catch(e) {}
+      for (const [t, l] of parts) {
+        if (tok !== sayToken) return;
+        try { await NTTS.speak({ text: t, lang: l, rate: l.startsWith('en') ? 0.9 : 1.0, pitch: 1.0, volume: 1.0, category: 'playback' }); }
+        catch(e) { if (l.startsWith('he')) toast('אין קול עברי בטלפון. אפשר להתקין בהגדרות: המרת טקסט לדיבור.'); }
+        await wait(350);
+      }
+      if (tok === sayToken) done && done();
+    })();
+    return;
+  }
+  if (!TTS_OK) { toast(NO_TTS); done && done(); return; }
+  try { speechSynthesis.cancel(); } catch(e) { toast(NO_TTS); done && done(); return; }
+  loadVoices();
+  let k = 0, heard = false;
+  const go = () => {
+    if (tok !== sayToken) return;
+    if (k >= parts.length) { done && done(); return; }
+    const [t, l] = parts[k++];
+    const u = new SpeechSynthesisUtterance(t); u.lang = l;
+    if (l.startsWith('he')) { const v = heVoice(); if (v) u.voice = v; else if (voices.length) toast('אין קול עברי בטלפון. אפשר להתקין בהגדרות: המרת טקסט לדיבור.'); }
+    else { const v = enVoice(); if (v) u.voice = v; }
+    u.onstart = () => { heard = true; };
+    u.rate = l.startsWith('en') ? 0.9 : 1;
+    u.onend = () => setTimeout(go, 400);
+    u.onerror = () => setTimeout(go, 50);
+    try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch(e) { toast(NO_TTS); }
+  };
+  // Chrome on Android drops an utterance spoken right after cancel(), so wait a moment
+  setTimeout(go, 120);
+  setTimeout(() => { if (tok === sayToken && !heard && TTS_OK && !speechSynthesis.speaking) toast(NO_TTS); }, 2500);
+}
+function fcShow(){
+  const w = fcList[fcI]; if (!w) return;
+  $('fcEn').textContent = w.en; $('fcHe').textContent = w.he;
+  $('fcCount').textContent = `${fcI+1} / ${fcList.length}`;
+}
+function fcSay(done){ const w = fcList[fcI]; if (w) sayParts([[w.en,'en-US'], [w.he.replace(/[-–]$/,''),'he-IL']], done); }
+function stopAuto(){
+  fcAutoOn = false; sayToken++;
+  try { speechSynthesis.cancel(); } catch(e) {}
+  try { NTTS && NTTS.stop(); } catch(e) {}
+  $('fcAuto').textContent = '▶ כל הסט';
+}
+function autoStep(){
+  fcSay(() => {
+    if (!fcAutoOn) return;
+    if (fcI < fcList.length - 1) { fcI++; fcShow(); setTimeout(() => fcAutoOn && autoStep(), 700); }
+    else stopAuto();
+  });
+}
+function fcMove(d){ stopAuto(); fcI = (fcI + d + fcList.length) % fcList.length; fcShow(); }
+function setMode(m){
+  $('pvMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
+  $('pvCards').classList.toggle('hidden', m !== 'cards');
+  $('pvList').classList.toggle('hidden', m !== 'list');
+  if (m !== 'cards') stopAuto();
+}
+$('pvMode').querySelectorAll('button').forEach(b => b.onclick = () => setMode(b.dataset.m));
+$('fcPlay').onclick = () => { stopAuto(); fcSay(); };
+$('fcNext').onclick = () => fcMove(1);
+$('fcPrev').onclick = () => fcMove(-1);
+$('fcAuto').onclick = () => {
+  if (fcAutoOn) return stopAuto();
+  fcAutoOn = true; $('fcAuto').textContent = '⏸ עצירה'; autoStep();
+};
+(() => {
+  let x0 = null;
+  const c = $('pvCards');
+  c.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive:true});
+  c.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) fcMove(dx < 0 ? 1 : -1);
+  });
+})();
+$('ready').onclick = () => { stopAuto(); show('game'); next(); };
+$('pvBack').onclick = () => { stopAuto(); renderSets(); show('setup'); };
+function distractors(correct){
+  const used = new Set([correct.he]); const out = [];
+  // prefer distractors from the same set so options feel related, then fill from all words
+  const cands = shuffle(pool.filter(w => w.en !== correct.en)).concat(shuffle(words.slice()));
+  for (const w of cands) {
+    if (w.en !== correct.en && !used.has(w.he)) { used.add(w.he); out.push(w.he); }
+    if (out.length===3) break;
+  }
+  return out;
+}
+function next(){
+  if (qi >= queue.length) return finish();
+  locked=false; current = queue[qi];
+  $('qn').textContent = qi+1; $('word').textContent = current.en;
+  $('fb').textContent=''; $('fb').className='feedback';
+  const box = $('opts'); box.innerHTML='';
+  shuffle([current.he, ...distractors(current)]).forEach((t,i) => {
+    const b = document.createElement('button'); b.className='opt';
+    const k = document.createElement('span'); k.className='k'; k.textContent=i+1;
+    const s = document.createElement('span'); s.textContent=t;
+    b.append(s,k); b.dataset.he=t; b.onclick = () => answer(b); box.append(b);
+  });
+  deadline = performance.now() + secs*1000;
+  cancelAnimationFrame(timerRaf); tick();
+}
+function tick(){
+  const left = Math.max(0, deadline - performance.now());
+  const f = $('barFill');
+  f.style.transform = `scaleX(${left/(secs*1000)})`;
+  f.classList.toggle('late', left < Math.min(3000, secs*400));
+  if (left <= 0) return answer(null);
+  timerRaf = requestAnimationFrame(tick);
+}
+function answer(btn){
+  if (locked) return; locked=true; cancelAnimationFrame(timerRaf);
+  const right = [...$('opts').children].find(b => b.dataset.he === current.he);
+  right.classList.add('right');
+  const fb = $('fb');
+  if (btn && btn === right) {
+    score += 10 + Math.ceil(Math.max(0, deadline - performance.now())/1000); streak++;
+    fb.textContent = streak >= 3 ? `נכון! רצף של ${streak} 🔥` : 'נכון!'; fb.classList.add('ok');
+    const k = missBank.indexOf(current.en); if (k >= 0) missBank.splice(k,1);
+  } else {
+    if (btn) btn.classList.add('wrong');
+    streak=0; missed.push(current);
+    if (!missBank.includes(current.en)) missBank.push(current.en);
+    fb.textContent = (btn ? 'לא בדיוק. ' : 'נגמר הזמן! ') + `${current.en} = ${current.he}`;
+    fb.classList.add('bad');
+  }
+  sv('vb-miss', missBank);
+  $('score').textContent=score; $('streak').textContent=streak;
+  qi++; setTimeout(next, btn && btn===right ? 700 : 1800);
+}
+function finish(){
+  const correct = queue.length - missed.length;
+  const pct = Math.round(correct*100/queue.length);
+  if (setIdx != null) { const k = bestKey(setIdx); if (best[k]==null || pct > best[k]) { best[k] = pct; sv('vb-best-off', best); } }
+  $('resPct').textContent = pct + '%';
+  $('resText').textContent = `${correct} מתוך ${queue.length} נכונות · ${score} נקודות` + (pct===100 ? ' · מושלם!' : '');
+  const ml = $('missList'); ml.innerHTML='';
+  missed.forEach(w => {
+    const d=document.createElement('div');
+    const en=document.createElement('span'); en.textContent=w.en; en.style.cssText='direction:ltr;font-family:Georgia,serif;font-weight:600';
+    const he=document.createElement('span'); he.textContent=w.he;
+    d.append(he,en); ml.append(d);
+  });
+  $('missPanel').classList.toggle('hidden', !missed.length);
+  $('practiceMiss').classList.toggle('hidden', !missed.length);
+  $('nextSet').classList.toggle('hidden', setIdx == null || setIdx+1 >= setCount());
+  show('results');
+}
+$('speak').onclick = () => sayParts([[current.en,'en-US']]);
+$('randomBtn').onclick = () => startGame(shuffle(words.slice()).slice(0, size), null, 'סט אקראי');
+$('mistakesBtn').onclick = () => {
+  const m = words.filter(w => missBank.includes(w.en));
+  startGame(shuffle(m).slice(0, size), null, 'טעויות');
+};
+$('nextSet').onclick = () => startGame(setWords(setIdx+1), setIdx+1);
+$('again').onclick = () => startGame(pool, setIdx, $('setName').textContent);
+$('practiceMiss').onclick = () => startGame([...missed], null, 'טעויות');
+$('home').onclick = () => { renderSets(); show('setup'); };
+$('quit').onclick = () => { cancelAnimationFrame(timerRaf); locked=true; renderSets(); show('setup'); };
+document.addEventListener('keydown', e => {
+  if ($('game').classList.contains('hidden') || locked) return;
+  const n = parseInt(e.key,10);
+  if (n>=1 && n<=4) { const b=$('opts').children[n-1]; if (b) answer(b); }
+});
+renderBank(); renderSets();
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !NTTS) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
